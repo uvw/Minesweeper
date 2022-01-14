@@ -1,6 +1,6 @@
 import AppKit
 
-protocol MinefieldDelegate: class {
+protocol MinefieldDelegate: AnyObject {
     func minefieldWindowShouldClose(_ minefield: Minefield) -> Bool
     func minefieldWindowDidResize(_ minefield: Minefield)
 }

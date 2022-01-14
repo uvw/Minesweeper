@@ -1,6 +1,6 @@
 import AppKit
 
-protocol MoundDelegate: class {
+protocol MoundDelegate: AnyObject {
     func moundCanAct(_: Mound) -> Bool
     func moundDidDig(_: Mound)
     func moundNeedDigVicinities(_: Mound)
