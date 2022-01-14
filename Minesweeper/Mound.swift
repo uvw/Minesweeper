@@ -7,6 +7,7 @@ protocol MoundDelegate: AnyObject {
     func mound(_: Mound, shouldFlagAs mark: Mound.Flag) -> Bool
     var mineStyle: Minefield.MineStyle {get}
     var fieldStyle: Minefield.FieldStyle {get}
+    var useUncertain: Bool {get}
 }
 
 class Mound: NSView {
@@ -433,7 +434,11 @@ extension Mound {
     override func rightMouseDown(with event: NSEvent) {
         guard delegate?.moundCanAct(self) ?? true == true, case .covered(withFlag: let flag) = state else {return}
         
-        let nextFlag = Flag(rawValue: flag.rawValue + 1) ?? Flag(rawValue: 0)!
+        var nextFlag = Flag(rawValue: flag.rawValue + 1) ?? Flag(rawValue: 0)!
+        if nextFlag == .uncertain && delegate?.useUncertain == false {
+            nextFlag = Flag(rawValue: nextFlag.rawValue + 1) ?? Flag(rawValue: 0)!
+        }
+    
         if delegate?.mound(self, shouldFlagAs: nextFlag) ?? true {
             state = .covered(withFlag: nextFlag)
         }

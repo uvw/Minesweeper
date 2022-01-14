@@ -58,6 +58,7 @@ class Minefield: NSView {
     
     weak var delegate: MinefieldDelegate?
     
+    var useUncertain: Bool = true
     var difficulty: Difficulty
     var moundMatrix: MoundMatrix!
     var moundDelegate: MoundDelegate
@@ -108,7 +109,12 @@ class Minefield: NSView {
         }
     }
     
-    init(mineStyle: MineStyle?, fieldStyle: FieldStyle?, moundSize: CGFloat?, difficulty: Difficulty?, moundDelegate: MoundDelegate) {
+    init(mineStyle: MineStyle?,
+         fieldStyle: FieldStyle?,
+         moundSize: CGFloat?,
+         difficulty: Difficulty?,
+         useUncertain: Bool?,
+         moundDelegate: MoundDelegate) {
         if fieldStyle != nil {
             self.fieldStyle = fieldStyle!
         } else if #available(OSX 10.16, *) {
@@ -121,6 +127,7 @@ class Minefield: NSView {
         self.moundSize = 0
         self.difficulty = difficulty ?? .beginner
         self.moundDelegate = moundDelegate
+        self.useUncertain = useUncertain ?? true
         super.init(frame: .zero)
         self.moundSize = max(minMoundSize, round(moundSize ?? standardMoundSize))
         

@@ -8,6 +8,7 @@ class PreferenceSheet: NSWindow {
     var mineStyle: Minefield.MineStyle
     var sadMacBehavior: MinefieldController.SadMacBehavior
     var isBattling: Bool
+    var useUncertain: Bool
     
     private var originDifficulty: Minefield.Difficulty
     
@@ -23,15 +24,21 @@ class PreferenceSheet: NSWindow {
     let heightInput = IntegerTextField()
     let mineInput = IntegerTextField()
     let applyCheckbox = NSButton(checkboxWithTitle: "apply-checkbox".localized, target: nil, action: nil)
+    let useUncertainCheckbox = NSButton(checkboxWithTitle: "use-uncertain-checkbox".localized, target: nil, action: nil)
     let mineStylePopUp = NSPopUpButton(frame: .zero, pullsDown: false)
     let sadMacPopUp = NSPopUpButton(frame: .zero, pullsDown: false)
     let okButton = NSButton(title: "alert-done".localized, target: nil, action: nil)
     
-    init(difficulty: Minefield.Difficulty, mineStyle: Minefield.MineStyle, sadMacBehavior: MinefieldController.SadMacBehavior, isBattling: Bool) {
+    init(difficulty: Minefield.Difficulty,
+         mineStyle: Minefield.MineStyle,
+         sadMacBehavior: MinefieldController.SadMacBehavior,
+         useUncertain: Bool,
+         isBattling: Bool) {
         self.originDifficulty = difficulty
         self.difficulty = difficulty
         self.mineStyle = mineStyle
         self.sadMacBehavior = sadMacBehavior
+        self.useUncertain = useUncertain
         self.isBattling = isBattling
         
         super.init(contentRect: .zero, styleMask: [.titled], backing: .buffered, defer: false)
@@ -99,6 +106,10 @@ class PreferenceSheet: NSWindow {
         applyCheckbox.target = self
         applyCheckbox.action = #selector(toggleApplyCheckbox(_:))
         
+        useUncertainCheckbox.state = self.useUncertain ? .on : .off
+        useUncertainCheckbox.target = self
+        useUncertainCheckbox.action = #selector(toggleUseUncertainCheckbox(_:))
+        
         mineStylePopUp.addItems(withTitles: [
             Minefield.MineStyle(rawValue: 0)!.description,
             Minefield.MineStyle(rawValue: 1)!.description
@@ -130,14 +141,15 @@ class PreferenceSheet: NSWindow {
         }
         
         let contentGrid = NSGridView(views: [
-            [difficultyLabel,   beginnerRadioButton,        placeholder(),      customRadioButton,  emptyInput                                  ],
-            [placeholder(),     intermediateRadioButton,    placeholder(),      sizeLabel,          widthInput,     multiplyLabel,  heightInput ],
-            [placeholder(),     advancedRadioButton,        placeholder(),      mineLabel,          mineInput                                   ],
-            [placeholder(),     placeholder(),              helpLabel,                                                                          ],
-            [placeholder(),     applyCheckbox                                                                                                   ],
-            [clickSadMacLabel,  sadMacPopUp                                                                                                     ],
-            [mineStyleLabel,    mineStylePopUp,                                                                                                 ],
-            [separator                                                                                                                          ]
+            [difficultyLabel,   beginnerRadioButton,        placeholder(),      customRadioButton,  emptyInput                                  ], // 0
+            [placeholder(),     intermediateRadioButton,    placeholder(),      sizeLabel,          widthInput,     multiplyLabel,  heightInput ], // 1
+            [placeholder(),     advancedRadioButton,        placeholder(),      mineLabel,          mineInput                                   ], // 2
+            [placeholder(),     placeholder(),              helpLabel,                                                                          ], // 3
+            [placeholder(),     applyCheckbox                                                                                                   ], // 4
+            [placeholder(),     useUncertainCheckbox                                                                                            ], // 5
+            [clickSadMacLabel,  sadMacPopUp                                                                                                     ], // 6
+            [mineStyleLabel,    mineStylePopUp,                                                                                                 ], // 7
+            [separator                                                                                                                          ], // 8
         ])
         
         emptyInput.isHidden = true
@@ -152,13 +164,15 @@ class PreferenceSheet: NSWindow {
         contentGrid.row(at: 3).topPadding = NSFont.smallSystemFontSize * 0.5
         contentGrid.row(at: 4).topPadding = NSFont.systemFontSize
         contentGrid.row(at: 4).mergeCells(in: NSRange(location: 1, length: 6))
-        contentGrid.row(at: 5).topPadding = NSFont.systemFontSize * 1.5
-        contentGrid.row(at: 5).mergeCells(in: NSRange(location: 1, length: 2))
+        contentGrid.row(at: 5).topPadding = NSFont.systemFontSize
+        contentGrid.row(at: 5).mergeCells(in: NSRange(location: 1, length: 6))
         contentGrid.row(at: 6).topPadding = NSFont.systemFontSize * 1.5
         contentGrid.row(at: 6).mergeCells(in: NSRange(location: 1, length: 2))
-        contentGrid.row(at: 7).mergeCells(in: NSRange(location: 0, length: 7))
-        contentGrid.row(at: 7).topPadding = NSFont.systemFontSize * 1.25
-        contentGrid.row(at: 7).bottomPadding = NSFont.systemFontSize * 1
+        contentGrid.row(at: 7).topPadding = NSFont.systemFontSize * 1.5
+        contentGrid.row(at: 7).mergeCells(in: NSRange(location: 1, length: 2))
+        contentGrid.row(at: 8).mergeCells(in: NSRange(location: 0, length: 7))
+        contentGrid.row(at: 8).topPadding = NSFont.systemFontSize * 1.25
+        contentGrid.row(at: 8).bottomPadding = NSFont.systemFontSize * 1
         
         contentGrid.rowSpacing = NSFont.systemFont(ofSize: -1).xHeight * 0.5
         contentGrid.columnSpacing = 0
@@ -269,6 +283,10 @@ class PreferenceSheet: NSWindow {
     
     @objc func toggleApplyCheckbox(_ sender: NSButton) {
         givesUpToApplyDifficulty = sender.state == .on
+    }
+    
+    @objc func toggleUseUncertainCheckbox(_ sender: NSButton) {
+        useUncertain = sender.state == .on
     }
     
     @objc func selectSadMacPopUp(_ sender: NSPopUpButton) {

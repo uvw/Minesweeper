@@ -23,6 +23,7 @@ class MinefieldController: NSViewController {
         case sadMacBehavior = "SadMacBehavior"
         case states = "States"
         case timeInterval = "TimeInterval"
+        case useUncertain = "UseUncertain"
     }
     
     var minefield: Minefield {
@@ -175,13 +176,14 @@ class MinefieldController: NSViewController {
             if let difficulty = UserDefaults.standard.array(forKey: key.rawValue) as? [Int] {
                 return Minefield.Difficulty(rawValues: difficulty)
             }
+        case .useUncertain:
+            return UserDefaults.standard.bool(forKey: key.rawValue)
         case .sadMacBehavior:
             if let sadMacBehavior = UserDefaults.standard.object(forKey: key.rawValue) as? Int {
                 return SadMacBehavior(rawValue: sadMacBehavior)
             }
         case .states:
             return UserDefaults.standard.string(forKey: key.rawValue)
-            
         case .timeInterval:
             return UserDefaults.standard.object(forKey: key.rawValue) as? Int
         }
@@ -199,6 +201,8 @@ class MinefieldController: NSViewController {
                 UserDefaults.standard.set(minefield.fieldStyle.rawValue, forKey: key.rawValue)
             case .difficulty:
                 UserDefaults.standard.set(minefield.difficulty.rawValues, forKey: key.rawValue)
+            case .useUncertain:
+                UserDefaults.standard.set(minefield.useUncertain, forKey: key.rawValue)
             case .sadMacBehavior:
                 UserDefaults.standard.set(sadMacBehavior.rawValue, forKey: key.rawValue)
             case .states:
@@ -232,6 +236,7 @@ class MinefieldController: NSViewController {
             fieldStyle: userDefault(for: .fieldStyle) as? Minefield.FieldStyle,
             moundSize: userDefault(for: .moundSize) as? CGFloat,
             difficulty: userDefault(for: .difficulty) as? Minefield.Difficulty,
+            useUncertain: userDefault(for: .useUncertain) as? Bool,
             moundDelegate: self
         )
         
@@ -399,6 +404,8 @@ extension MinefieldController: MoundDelegate {
     var mineStyle: Minefield.MineStyle {minefield.mineStyle}
     
     var fieldStyle: Minefield.FieldStyle {minefield.fieldStyle}
+    
+    var useUncertain: Bool {minefield.useUncertain}
     
     func moundCanAct(_ mound: Mound) -> Bool {canAct}
     
