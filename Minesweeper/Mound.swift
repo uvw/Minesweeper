@@ -438,4 +438,17 @@ extension Mound {
             state = .covered(withFlag: nextFlag)
         }
     }
+    
+    override func otherMouseDown(with event: NSEvent) {
+        let middleButton = 2
+        
+        guard event.buttonNumber == middleButton,
+              state == .exposed,
+              delegate?.moundCanAct(self) ?? true == true else {
+                  return super.otherMouseDown(with: event)
+              }
+        
+        delegate?.moundNeedDigVicinities(self)
+        timeOfLastMouseDown = nil
+    }
 }
