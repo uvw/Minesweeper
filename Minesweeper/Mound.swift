@@ -8,6 +8,7 @@ protocol MoundDelegate: AnyObject {
     var mineStyle: Minefield.MineStyle {get}
     var fieldStyle: Minefield.FieldStyle {get}
     var useUncertain: Bool {get}
+    var quickMode: Bool {get}
 }
 
 class Mound: NSView {
@@ -403,6 +404,12 @@ extension Mound {
             isPressed = true
             setNeedsDisplay(bounds)
         case .exposed:
+            if delegate?.quickMode == true {
+                delegate?.moundNeedDigVicinities(self)
+                timeOfLastMouseDown = nil
+                return
+            }
+            
             if timeOfLastMouseDown == nil || event.timestamp - timeOfLastMouseDown! > NSEvent.doubleClickInterval {
                 timeOfLastMouseDown = event.timestamp
             } else {

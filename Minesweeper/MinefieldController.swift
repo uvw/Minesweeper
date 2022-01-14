@@ -24,6 +24,7 @@ class MinefieldController: NSViewController {
         case states = "States"
         case timeInterval = "TimeInterval"
         case useUncertain = "UseUncertain"
+        case quickMode = "QuickMode"
     }
     
     var minefield: Minefield {
@@ -178,6 +179,8 @@ class MinefieldController: NSViewController {
             }
         case .useUncertain:
             return UserDefaults.standard.bool(forKey: key.rawValue)
+        case .quickMode:
+            return UserDefaults.standard.bool(forKey: key.rawValue)
         case .sadMacBehavior:
             if let sadMacBehavior = UserDefaults.standard.object(forKey: key.rawValue) as? Int {
                 return SadMacBehavior(rawValue: sadMacBehavior)
@@ -203,6 +206,8 @@ class MinefieldController: NSViewController {
                 UserDefaults.standard.set(minefield.difficulty.rawValues, forKey: key.rawValue)
             case .useUncertain:
                 UserDefaults.standard.set(minefield.useUncertain, forKey: key.rawValue)
+            case .quickMode:
+                UserDefaults.standard.set(minefield.quickMode, forKey: key.rawValue)
             case .sadMacBehavior:
                 UserDefaults.standard.set(sadMacBehavior.rawValue, forKey: key.rawValue)
             case .states:
@@ -237,6 +242,7 @@ class MinefieldController: NSViewController {
             moundSize: userDefault(for: .moundSize) as? CGFloat,
             difficulty: userDefault(for: .difficulty) as? Minefield.Difficulty,
             useUncertain: userDefault(for: .useUncertain) as? Bool,
+            quickMode: userDefault(for: .quickMode) as? Bool,
             moundDelegate: self
         )
         
@@ -398,6 +404,12 @@ extension MinefieldController: MinefieldDelegate {
     func minefieldWindowDidResize(_ minefield: Minefield) {
         setUserDefaults(for: [.moundSize])
     }
+    
+    func minefieldTryRelive() {
+        if canAct {return}
+        
+        relive(redeploys: isAlive || sadMacBehavior == .redeploy)
+    }
 }
 
 extension MinefieldController: MoundDelegate {
@@ -406,6 +418,8 @@ extension MinefieldController: MoundDelegate {
     var fieldStyle: Minefield.FieldStyle {minefield.fieldStyle}
     
     var useUncertain: Bool {minefield.useUncertain}
+    
+    var quickMode: Bool {minefield.quickMode}
     
     func moundCanAct(_ mound: Mound) -> Bool {canAct}
     
@@ -464,11 +478,6 @@ extension MinefieldController: MoundDelegate {
         
         if numberOfFlaggedVicinities >= mound.hint {
             return vicinityMounds.forEach {$0.dig()}
-        }
-        
-        NSCursor.operationNotAllowed.push()
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.75) {
-            NSCursor.current.pop()
         }
     }
     

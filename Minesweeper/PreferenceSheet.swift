@@ -9,6 +9,7 @@ class PreferenceSheet: NSWindow {
     var sadMacBehavior: MinefieldController.SadMacBehavior
     var isBattling: Bool
     var useUncertain: Bool
+    var quickMode: Bool
     
     private var originDifficulty: Minefield.Difficulty
     
@@ -25,6 +26,7 @@ class PreferenceSheet: NSWindow {
     let mineInput = IntegerTextField()
     let applyCheckbox = NSButton(checkboxWithTitle: "apply-checkbox".localized, target: nil, action: nil)
     let useUncertainCheckbox = NSButton(checkboxWithTitle: "use-uncertain-checkbox".localized, target: nil, action: nil)
+    let quickModeCheckbox = NSButton(checkboxWithTitle: "quick-mode-checkbox".localized, target: nil, action: nil)
     let mineStylePopUp = NSPopUpButton(frame: .zero, pullsDown: false)
     let sadMacPopUp = NSPopUpButton(frame: .zero, pullsDown: false)
     let okButton = NSButton(title: "alert-done".localized, target: nil, action: nil)
@@ -33,12 +35,14 @@ class PreferenceSheet: NSWindow {
          mineStyle: Minefield.MineStyle,
          sadMacBehavior: MinefieldController.SadMacBehavior,
          useUncertain: Bool,
+         quickMode: Bool,
          isBattling: Bool) {
         self.originDifficulty = difficulty
         self.difficulty = difficulty
         self.mineStyle = mineStyle
         self.sadMacBehavior = sadMacBehavior
         self.useUncertain = useUncertain
+        self.quickMode = quickMode
         self.isBattling = isBattling
         
         super.init(contentRect: .zero, styleMask: [.titled], backing: .buffered, defer: false)
@@ -110,6 +114,10 @@ class PreferenceSheet: NSWindow {
         useUncertainCheckbox.target = self
         useUncertainCheckbox.action = #selector(toggleUseUncertainCheckbox(_:))
         
+        quickModeCheckbox.state = self.quickMode ? .on : .off
+        quickModeCheckbox.target = self
+        quickModeCheckbox.action = #selector(toggleQuickModeCheckbox(_:))
+        
         mineStylePopUp.addItems(withTitles: [
             Minefield.MineStyle(rawValue: 0)!.description,
             Minefield.MineStyle(rawValue: 1)!.description
@@ -147,9 +155,10 @@ class PreferenceSheet: NSWindow {
             [placeholder(),     placeholder(),              helpLabel,                                                                          ], // 3
             [placeholder(),     applyCheckbox                                                                                                   ], // 4
             [placeholder(),     useUncertainCheckbox                                                                                            ], // 5
-            [clickSadMacLabel,  sadMacPopUp                                                                                                     ], // 6
-            [mineStyleLabel,    mineStylePopUp,                                                                                                 ], // 7
-            [separator                                                                                                                          ], // 8
+            [placeholder(),     quickModeCheckbox                                                                                               ], // 6
+            [clickSadMacLabel,  sadMacPopUp                                                                                                     ], // 7
+            [mineStyleLabel,    mineStylePopUp,                                                                                                 ], // 8
+            [separator                                                                                                                          ], // 9
         ])
         
         emptyInput.isHidden = true
@@ -166,13 +175,15 @@ class PreferenceSheet: NSWindow {
         contentGrid.row(at: 4).mergeCells(in: NSRange(location: 1, length: 6))
         contentGrid.row(at: 5).topPadding = NSFont.systemFontSize
         contentGrid.row(at: 5).mergeCells(in: NSRange(location: 1, length: 6))
-        contentGrid.row(at: 6).topPadding = NSFont.systemFontSize * 1.5
-        contentGrid.row(at: 6).mergeCells(in: NSRange(location: 1, length: 2))
+        contentGrid.row(at: 6).topPadding = NSFont.systemFontSize
+        contentGrid.row(at: 6).mergeCells(in: NSRange(location: 1, length: 6))
         contentGrid.row(at: 7).topPadding = NSFont.systemFontSize * 1.5
         contentGrid.row(at: 7).mergeCells(in: NSRange(location: 1, length: 2))
-        contentGrid.row(at: 8).mergeCells(in: NSRange(location: 0, length: 7))
-        contentGrid.row(at: 8).topPadding = NSFont.systemFontSize * 1.25
-        contentGrid.row(at: 8).bottomPadding = NSFont.systemFontSize * 1
+        contentGrid.row(at: 8).topPadding = NSFont.systemFontSize * 1.5
+        contentGrid.row(at: 8).mergeCells(in: NSRange(location: 1, length: 2))
+        contentGrid.row(at: 9).mergeCells(in: NSRange(location: 0, length: 7))
+        contentGrid.row(at: 9).topPadding = NSFont.systemFontSize * 1.25
+        contentGrid.row(at: 9).bottomPadding = NSFont.systemFontSize * 1
         
         contentGrid.rowSpacing = NSFont.systemFont(ofSize: -1).xHeight * 0.5
         contentGrid.columnSpacing = 0
@@ -288,7 +299,11 @@ class PreferenceSheet: NSWindow {
     @objc func toggleUseUncertainCheckbox(_ sender: NSButton) {
         useUncertain = sender.state == .on
     }
-    
+
+    @objc func toggleQuickModeCheckbox(_ sender: NSButton) {
+        quickMode = sender.state == .on
+    }
+
     @objc func selectSadMacPopUp(_ sender: NSPopUpButton) {
         sadMacBehavior = MinefieldController.SadMacBehavior(rawValue: sender.indexOfSelectedItem)!
     }

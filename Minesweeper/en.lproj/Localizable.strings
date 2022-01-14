@@ -39,6 +39,7 @@ size-label              = "Size: ";
 mine-label              = "Mines: ";
 apply-checkbox          = "Give up current progress to apply the new difficulty";
 use-uncertain-checkbox  = "Allow question marks";
+quick-mode-checkbox     = "Quick click mode";
 preferences-help-label  = "%d × %d mound grid, %d mines.";
 start-a-new-game        = "Start a new game";
 do-nothing              = "Do nothing";

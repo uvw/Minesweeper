@@ -3,6 +3,7 @@ import AppKit
 protocol MinefieldDelegate: AnyObject {
     func minefieldWindowShouldClose(_ minefield: Minefield) -> Bool
     func minefieldWindowDidResize(_ minefield: Minefield)
+    func minefieldTryRelive()
 }
 
 class Minefield: NSView {
@@ -58,7 +59,8 @@ class Minefield: NSView {
     
     weak var delegate: MinefieldDelegate?
     
-    var useUncertain: Bool = true
+    var useUncertain: Bool
+    var quickMode: Bool
     var difficulty: Difficulty
     var moundMatrix: MoundMatrix!
     var moundDelegate: MoundDelegate
@@ -114,6 +116,7 @@ class Minefield: NSView {
          moundSize: CGFloat?,
          difficulty: Difficulty?,
          useUncertain: Bool?,
+         quickMode: Bool?,
          moundDelegate: MoundDelegate) {
         if fieldStyle != nil {
             self.fieldStyle = fieldStyle!
@@ -128,6 +131,7 @@ class Minefield: NSView {
         self.difficulty = difficulty ?? .beginner
         self.moundDelegate = moundDelegate
         self.useUncertain = useUncertain ?? true
+        self.quickMode = quickMode ?? false
         super.init(frame: .zero)
         self.moundSize = max(minMoundSize, round(moundSize ?? standardMoundSize))
         
@@ -406,6 +410,10 @@ class Minefield: NSView {
     
     override func mouseDown(with event: NSEvent) {
         stopAllAnimationsIfNeeded()
+
+        if quickMode {
+            delegate?.minefieldTryRelive()
+        }
     }
 }
 

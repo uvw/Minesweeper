@@ -50,13 +50,15 @@ extension MinefieldController {
                                               mineStyle: mineStyle,
                                               sadMacBehavior: sadMacBehavior,
                                               useUncertain: minefield.useUncertain,
+                                              quickMode: minefield.quickMode,
                                               isBattling: isBattling)
         
         minefield.window!.beginSheet(preferenceSheet) {_ in
             self.sadMacBehavior = preferenceSheet.sadMacBehavior
             self.minefield.mineStyle = preferenceSheet.mineStyle
             self.minefield.useUncertain = preferenceSheet.useUncertain
-            self.setUserDefaults(for: [.sadMacBehavior, .mineStyle, .useUncertain])
+            self.minefield.quickMode = preferenceSheet.quickMode
+            self.setUserDefaults(for: [.sadMacBehavior, .mineStyle, .useUncertain, .quickMode])
             self.setSadType()
             
             if self.isBattling {
