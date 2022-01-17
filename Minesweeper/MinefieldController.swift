@@ -25,6 +25,7 @@ class MinefieldController: NSViewController {
         case timeInterval = "TimeInterval"
         case useUncertain = "UseUncertain"
         case quickMode = "QuickMode"
+        case autoPause = "AutoPause"
     }
     
     var minefield: Minefield {
@@ -72,9 +73,11 @@ class MinefieldController: NSViewController {
     
     var isBattling: Bool = false
     var isAlive: Bool = true
+    var isPaused: Bool = false
     var canAct: Bool = true
     var sadMacBehavior: SadMacBehavior = .askEveryTime
-    
+    var autoPause: Bool = false
+
     var nextDifficultyReminder: String = ""
     var nextDifficulty: Minefield.Difficulty? {
         didSet {
@@ -158,6 +161,14 @@ class MinefieldController: NSViewController {
         _succeededAlert.informativeText = nextDifficultyReminder
         return _succeededAlert
     }
+
+    private lazy var pauseAlert: NSAlert = {
+        let alert = NSAlert()
+        //alert.alertStyle = .informational
+        alert.messageText = "paused-alert-title".localized
+        alert.addButton(withTitle: "paused-alert-resume".localized)
+        return alert
+    }()
     
     func userDefault(for key: UserDefaultsKey) -> Any? {
         switch key {
@@ -180,6 +191,8 @@ class MinefieldController: NSViewController {
         case .useUncertain:
             return UserDefaults.standard.bool(forKey: key.rawValue)
         case .quickMode:
+            return UserDefaults.standard.bool(forKey: key.rawValue)
+        case .autoPause:
             return UserDefaults.standard.bool(forKey: key.rawValue)
         case .sadMacBehavior:
             if let sadMacBehavior = UserDefaults.standard.object(forKey: key.rawValue) as? Int {
@@ -208,6 +221,8 @@ class MinefieldController: NSViewController {
                 UserDefaults.standard.set(minefield.useUncertain, forKey: key.rawValue)
             case .quickMode:
                 UserDefaults.standard.set(minefield.quickMode, forKey: key.rawValue)
+            case .autoPause:
+                UserDefaults.standard.set(autoPause, forKey: key.rawValue)
             case .sadMacBehavior:
                 UserDefaults.standard.set(sadMacBehavior.rawValue, forKey: key.rawValue)
             case .states:
@@ -235,6 +250,8 @@ class MinefieldController: NSViewController {
         if let sadMacBehavior = userDefault(for: .sadMacBehavior) as? SadMacBehavior {
             self.sadMacBehavior = sadMacBehavior
         }
+        
+        self.autoPause = userDefault(for: .autoPause) as? Bool ?? false
         
         minefield = Minefield(
             mineStyle: userDefault(for: .mineStyle) as? Minefield.MineStyle,
@@ -271,7 +288,10 @@ class MinefieldController: NSViewController {
                                              height: toolbarItem.minSize.height)
             }
         }
-
+        
+        timerButton.action = #selector(pauseGame(_:))
+        timerButton.toolTip = "timer-tooltip".localized
+        
         setSadType()
         
         if let states = userDefault(for: .states) as? String {
@@ -303,12 +323,23 @@ class MinefieldController: NSViewController {
     }
     
     func startTimer() {
+        isPaused = false
         timer = Timer(timeInterval: 1, repeats: true) {_ in self.timeInterval += 1}
         RunLoop.current.add(timer, forMode: .default)
+        timerButton.isDisabled = false
     }
     
     func stopTimer() {
+        isPaused = true
         timer.invalidate()
+        timerButton.isDisabled = true
+    }
+    
+    func pauseGame(autmatic: Bool) {
+        guard self.isBattling && !self.isPaused else {return}
+        guard self.autoPause || !autmatic else {return}
+    
+        showAlert(pauseAlert)
     }
     
     func relive(redeploys: Bool, difficulty newDifficulty: Minefield.Difficulty? = nil) {
@@ -352,7 +383,7 @@ class MinefieldController: NSViewController {
         
         minefield.radiate(from: mound) {
             if self.sadMacBehavior == .askEveryTime {
-                self.succeededAlert.beginSheetModal(for: self.minefield.window!) {_ in
+                self.showAlert(self.succeededAlert) {_ in
                     self.relive(redeploys: true)
                 }
             }
@@ -372,7 +403,7 @@ class MinefieldController: NSViewController {
         
         let callback = {
             if self.sadMacBehavior == .askEveryTime {
-                self.failedAlert.beginSheetModal(for: self.minefield.window!) {response in
+                self.showAlert(self.failedAlert) {response in
                     self.relive(redeploys: response == .alertFirstButtonReturn)
                 }
             }
@@ -383,13 +414,26 @@ class MinefieldController: NSViewController {
         case .flower: minefield.disturb(from: mound, then: callback)
         }
     }
+    
+    func showAlert(_ alert: NSAlert, completionHandler handler: ((NSApplication.ModalResponse) -> Void)? = nil) {
+        if isBattling && !isPaused {
+            stopTimer()
+        }
+        
+        alert.beginSheetModal(for: self.minefield.window!) { response in
+            handler?(response)
+            if self.isBattling && self.isPaused {
+                self.startTimer()
+            }
+        }
+    }
 }
 
 extension MinefieldController: MinefieldDelegate {
     func minefieldWindowShouldClose(_: Minefield) -> Bool {
         if !isBattling {return true}
         
-        savingAlert.beginSheetModal(for: minefield.window!, completionHandler: NSApplication.shared.stopModal(withCode:))
+        showAlert(savingAlert, completionHandler: NSApplication.shared.stopModal(withCode:))
         switch savingAlert.runModal() {
         case .alertFirstButtonReturn:
             setUserDefaults(for: [.states, .timeInterval])
@@ -409,6 +453,10 @@ extension MinefieldController: MinefieldDelegate {
         if canAct {return}
         
         relive(redeploys: isAlive || sadMacBehavior == .redeploy)
+    }
+    
+    func minefieldPause() {
+        pauseGame(autmatic: true)
     }
 }
 

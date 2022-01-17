@@ -10,6 +10,7 @@ class PreferenceSheet: NSWindow {
     var isBattling: Bool
     var useUncertain: Bool
     var quickMode: Bool
+    var autoPause: Bool
     
     private var originDifficulty: Minefield.Difficulty
     
@@ -27,6 +28,7 @@ class PreferenceSheet: NSWindow {
     let applyCheckbox = NSButton(checkboxWithTitle: "apply-checkbox".localized, target: nil, action: nil)
     let useUncertainCheckbox = NSButton(checkboxWithTitle: "use-uncertain-checkbox".localized, target: nil, action: nil)
     let quickModeCheckbox = NSButton(checkboxWithTitle: "quick-mode-checkbox".localized, target: nil, action: nil)
+    let autoPauseCheckbox = NSButton(checkboxWithTitle: "auto-pause-checkbox".localized, target: nil, action: nil)
     let mineStylePopUp = NSPopUpButton(frame: .zero, pullsDown: false)
     let sadMacPopUp = NSPopUpButton(frame: .zero, pullsDown: false)
     let okButton = NSButton(title: "alert-done".localized, target: nil, action: nil)
@@ -36,6 +38,7 @@ class PreferenceSheet: NSWindow {
          sadMacBehavior: MinefieldController.SadMacBehavior,
          useUncertain: Bool,
          quickMode: Bool,
+         autoPause: Bool,
          isBattling: Bool) {
         self.originDifficulty = difficulty
         self.difficulty = difficulty
@@ -43,8 +46,9 @@ class PreferenceSheet: NSWindow {
         self.sadMacBehavior = sadMacBehavior
         self.useUncertain = useUncertain
         self.quickMode = quickMode
+        self.autoPause = autoPause
         self.isBattling = isBattling
-        
+                
         super.init(contentRect: .zero, styleMask: [.titled], backing: .buffered, defer: false)
         
         beginnerRadioButton.target = self
@@ -117,7 +121,11 @@ class PreferenceSheet: NSWindow {
         quickModeCheckbox.state = self.quickMode ? .on : .off
         quickModeCheckbox.target = self
         quickModeCheckbox.action = #selector(toggleQuickModeCheckbox(_:))
-        
+
+        autoPauseCheckbox.state = self.autoPause ? .on : .off
+        autoPauseCheckbox.target = self
+        autoPauseCheckbox.action = #selector(toggleAutoPauseCheckbox(_:))
+
         mineStylePopUp.addItems(withTitles: [
             Minefield.MineStyle(rawValue: 0)!.description,
             Minefield.MineStyle(rawValue: 1)!.description
@@ -156,6 +164,8 @@ class PreferenceSheet: NSWindow {
             [placeholder(),     applyCheckbox                                                                                                   ], // 4
             [placeholder(),     useUncertainCheckbox                                                                                            ], // 5
             [placeholder(),     quickModeCheckbox                                                                                               ], // 6
+            [placeholder(),     autoPauseCheckbox                                                                                               ], // 7
+            
             [clickSadMacLabel,  sadMacPopUp                                                                                                     ], // 7
             [mineStyleLabel,    mineStylePopUp,                                                                                                 ], // 8
             [separator                                                                                                                          ], // 9
@@ -177,13 +187,15 @@ class PreferenceSheet: NSWindow {
         contentGrid.row(at: 5).mergeCells(in: NSRange(location: 1, length: 6))
         contentGrid.row(at: 6).topPadding = NSFont.systemFontSize
         contentGrid.row(at: 6).mergeCells(in: NSRange(location: 1, length: 6))
-        contentGrid.row(at: 7).topPadding = NSFont.systemFontSize * 1.5
-        contentGrid.row(at: 7).mergeCells(in: NSRange(location: 1, length: 2))
+        contentGrid.row(at: 7).topPadding = NSFont.systemFontSize
+        contentGrid.row(at: 7).mergeCells(in: NSRange(location: 1, length: 6))
         contentGrid.row(at: 8).topPadding = NSFont.systemFontSize * 1.5
         contentGrid.row(at: 8).mergeCells(in: NSRange(location: 1, length: 2))
-        contentGrid.row(at: 9).mergeCells(in: NSRange(location: 0, length: 7))
-        contentGrid.row(at: 9).topPadding = NSFont.systemFontSize * 1.25
-        contentGrid.row(at: 9).bottomPadding = NSFont.systemFontSize * 1
+        contentGrid.row(at: 9).topPadding = NSFont.systemFontSize * 1.5
+        contentGrid.row(at: 9).mergeCells(in: NSRange(location: 1, length: 2))
+        contentGrid.row(at: 10).mergeCells(in: NSRange(location: 0, length: 7))
+        contentGrid.row(at: 10).topPadding = NSFont.systemFontSize * 1.25
+        contentGrid.row(at: 10).bottomPadding = NSFont.systemFontSize * 1
         
         contentGrid.rowSpacing = NSFont.systemFont(ofSize: -1).xHeight * 0.5
         contentGrid.columnSpacing = 0
@@ -303,7 +315,11 @@ class PreferenceSheet: NSWindow {
     @objc func toggleQuickModeCheckbox(_ sender: NSButton) {
         quickMode = sender.state == .on
     }
-
+    
+    @objc func toggleAutoPauseCheckbox(_ sender: NSButton) {
+        autoPause = sender.state == .on
+    }
+    
     @objc func selectSadMacPopUp(_ sender: NSPopUpButton) {
         sadMacBehavior = MinefieldController.SadMacBehavior(rawValue: sender.indexOfSelectedItem)!
     }

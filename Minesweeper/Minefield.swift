@@ -4,6 +4,7 @@ protocol MinefieldDelegate: AnyObject {
     func minefieldWindowShouldClose(_ minefield: Minefield) -> Bool
     func minefieldWindowDidResize(_ minefield: Minefield)
     func minefieldTryRelive()
+    func minefieldPause()
 }
 
 class Minefield: NSView {
@@ -110,6 +111,8 @@ class Minefield: NSView {
             }
         }
     }
+    
+    private var closing: Bool = false
     
     init(mineStyle: MineStyle?,
          fieldStyle: FieldStyle?,
@@ -456,6 +459,7 @@ extension Minefield: CAAnimationDelegate {
 }
 
 extension Minefield: NSWindowDelegate {
+
     func setWindowRatio() {
         window!.contentAspectRatio = NSSize(width: numberOfColumns, height: numberOfRows)
     }
@@ -524,11 +528,19 @@ extension Minefield: NSWindowDelegate {
         delegate?.minefieldWindowDidResize(self)
     }
     
+    func windowDidResignKey(_ notification: Notification) {
+        guard !closing else {return}
+        delegate?.minefieldPause()
+    }
+    
     func windowWillClose(_: Notification) {
+        closing = true
         stopAllAnimationsIfNeeded()
     }
     
     func windowShouldClose(_: NSWindow) -> Bool {
-        delegate?.minefieldWindowShouldClose(self) ?? true
+        closing = true
+        closing = delegate?.minefieldWindowShouldClose(self) ?? true
+        return closing
     }
 }
