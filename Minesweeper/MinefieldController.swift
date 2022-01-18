@@ -274,7 +274,6 @@ class MinefieldController: NSViewController {
             (smileyButton, smileyToolbarItem),
             (counterButton, counterToolbarItem)
         ] {
-            button.isDisabled = true
             if #available(OSX 10.16, *) {
                 button.bezelStyle = .texturedRounded
             } else if fieldStyle == .solid {
@@ -289,6 +288,7 @@ class MinefieldController: NSViewController {
             }
         }
         
+        counterButton.isDisabled = true
         timerButton.action = #selector(pauseGame(_:))
         timerButton.toolTip = "timer-tooltip".localized
         
@@ -365,7 +365,6 @@ class MinefieldController: NSViewController {
         }
         
         setEmotion(.happy)
-        smileyButton.isDisabled = true
         numberOfCoveredMounds = minefield.numberOfMounds
         numberOfFlags = 0
         isAlive = true
@@ -376,10 +375,6 @@ class MinefieldController: NSViewController {
         stopTimer()
         isBattling = false
         canAct = false
-        
-        if self.sadMacBehavior != .askEveryTime {
-            self.smileyButton.isDisabled = false
-        }
         
         minefield.radiate(from: mound) {
             if self.sadMacBehavior == .askEveryTime {
@@ -396,10 +391,6 @@ class MinefieldController: NSViewController {
         isAlive = false
         canAct = false
         setEmotion(.sad)
-        
-        if self.sadMacBehavior != .askEveryTime {
-            self.smileyButton.isDisabled = false
-        }
         
         let callback = {
             if self.sadMacBehavior == .askEveryTime {
