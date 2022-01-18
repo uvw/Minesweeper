@@ -5,6 +5,8 @@ protocol MoundDelegate: AnyObject {
     func moundDidDig(_: Mound)
     func moundNeedDigVicinities(_: Mound)
     func mound(_: Mound, shouldFlagAs mark: Mound.Flag) -> Bool
+    func moundTapVicinities(_: Mound)
+    func moundUntapVicinities(_: Mound)
     var mineStyle: Minefield.MineStyle {get}
     var fieldStyle: Minefield.FieldStyle {get}
     var useUncertain: Bool {get}
@@ -385,24 +387,48 @@ class Mound: NSView {
 }
 
 extension Mound {
+    private var canAct: Bool {
+        return delegate?.moundCanAct(self) ?? true
+    }
+    
     func dig() {
+        isPressed = false
+
         if state != .exposed {
             state = .exposed
             delegate?.moundDidDig(self)
         }
     }
     
+    func tap(pressed: Bool) {
+        isPressed = pressed
+        setNeedsDisplay(bounds)
+    }
+    
     override func mouseDown(with event: NSEvent) {
-        guard delegate?.moundCanAct(self) ?? true == true else {return super.mouseDown(with: event)}
+        guard canAct else {return super.mouseDown(with: event)}
 
         if event.modifierFlags.contains(.control) {
             return rightMouseDown(with: event)
         }
         
+        if state == .exposed {
+            delegate?.moundTapVicinities(self)
+        }
+        
+        tap(pressed: true)
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        guard canAct else {return super.mouseUp(with: event)}
+        
+        delegate?.moundUntapVicinities(self)
+        
+        guard isPressed else {return super.mouseUp(with: event)}
+        
         switch state {
         case .covered(withFlag: .none), .covered(withFlag: .uncertain):
-            isPressed = true
-            setNeedsDisplay(bounds)
+            dig()
         case .exposed:
             if delegate?.quickMode == true {
                 delegate?.moundNeedDigVicinities(self)
@@ -422,24 +448,20 @@ extension Mound {
     }
     
     override func mouseDragged(with event: NSEvent) {
-        if state == .covered(withFlag: .none) || state == .covered(withFlag: .uncertain), delegate?.moundCanAct(self) ?? true {
+        if state == .covered(withFlag: .none) || state == .covered(withFlag: .uncertain), canAct {
             let isMouseInBounds = self.bounds.contains(convert(event.locationInWindow, from: nil))
             if isPressed != isMouseInBounds {
-                isPressed = isMouseInBounds
-                setNeedsDisplay(bounds)
+                tap(pressed: isMouseInBounds)
             }
         }
     }
     
-    override func mouseUp(with event: NSEvent) {
-        if isPressed {
-            isPressed = false
-            dig()
-        }
-    }
-    
     override func rightMouseDown(with event: NSEvent) {
-        guard delegate?.moundCanAct(self) ?? true == true, case .covered(withFlag: let flag) = state else {return}
+        guard canAct else {return}
+        
+        isPressed = false // Left+right click to cancel left/middle click action
+        
+        guard case .covered(withFlag: let flag) = state else {return}
         
         var nextFlag = Flag(rawValue: flag.rawValue + 1) ?? Flag(rawValue: 0)!
         if nextFlag == .uncertain && delegate?.useUncertain == false {
@@ -452,15 +474,19 @@ extension Mound {
     }
     
     override func otherMouseDown(with event: NSEvent) {
-        let middleButton = 2
+        guard canAct, Mound.isMiddleButton(event) else {return super.otherMouseDown(with: event)}
+        mouseDown(with: event)
+    }
+    
+    override func otherMouseUp(with event: NSEvent) {
+        guard canAct, Mound.isMiddleButton(event), state == .exposed else {return super.otherMouseUp(with: event)}
         
-        guard event.buttonNumber == middleButton,
-              state == .exposed,
-              delegate?.moundCanAct(self) ?? true == true else {
-                  return super.otherMouseDown(with: event)
-              }
-        
+        delegate?.moundUntapVicinities(self)
         delegate?.moundNeedDigVicinities(self)
         timeOfLastMouseDown = nil
+    }
+    
+    static func isMiddleButton(_ event: NSEvent) -> Bool {
+        return event.buttonNumber == 2
     }
 }

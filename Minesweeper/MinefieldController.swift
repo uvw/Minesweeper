@@ -505,6 +505,25 @@ extension MinefieldController: MoundDelegate {
         }
     }
     
+    func moundTapVicinities(_ mound: Mound) {
+        minefield.moundMatrix.indexOf(mound)!.vicinities.forEach {vicinityIndex in
+            if let vicinityMound = minefield.moundMatrix[vicinityIndex],
+               vicinityMound != mound,
+               vicinityMound.state == .covered(withFlag: .none)  {
+                vicinityMound.tap(pressed: true)
+            }
+        }
+    }
+    
+    func moundUntapVicinities(_ mound: Mound) {
+        minefield.moundMatrix.indexOf(mound)!.vicinities.forEach {vicinityIndex in
+            if let vicinityMound = minefield.moundMatrix[vicinityIndex],
+               vicinityMound != mound {
+                vicinityMound.tap(pressed: false)
+            }
+        }
+    }
+    
     func moundNeedDigVicinities(_ mound: Mound) {
         if mound.hint == 0 {return}
         
