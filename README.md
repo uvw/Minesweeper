@@ -11,12 +11,12 @@ Minesweeper for Mac.
 And color varies with system accent.
 
 ## Appearances
-This Xcode project includes two icon files:
+This Xcode project includes two icon sets in the assets:
 
-- "AppIcon.X.icns" designed for macOS Catalina and below
-- "AppIcon.XI.icns" designed for macOS Big Sur and above
+- "AppIcon.X" designed for macOS Catalina and below
+- "AppIcon.XI" designed for macOS Big Sur and above
 
-and neither of them is currently set as the app icon. Before building, you may manually opt for one by renaming an icon file to "AppIcon.icns" or edit Info.plist directly.
+and neither of them is currently set as the app icon. Before building, you may manually opt for one by selecting the corresponding icon set in App Icons / Source.
 
 Also, style of minefields can be manually set regardless of the system version by
 
