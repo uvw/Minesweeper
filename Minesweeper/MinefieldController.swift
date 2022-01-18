@@ -510,6 +510,7 @@ extension MinefieldController: MoundDelegate {
         
         var numberOfFlaggedVicinities = 0
         var vicinityMounds: [Mound] = []
+        var uncertain = false
         
         minefield.moundMatrix.indexOf(mound)!.vicinities.forEach {vicinityIndex in
             if let vicinityMound = minefield.moundMatrix[vicinityIndex] {
@@ -518,11 +519,16 @@ extension MinefieldController: MoundDelegate {
                     return
                 case .covered(withFlag: .none):
                     vicinityMounds.append(vicinityMound)
+                case .covered(withFlag: .uncertain):
+                    uncertain = true
+                    return
                 default:
                     numberOfFlaggedVicinities += 1
                 }
             }
         }
+        
+        if uncertain {return}
         
         if numberOfFlaggedVicinities >= mound.hint {
             return vicinityMounds.forEach {$0.dig()}
